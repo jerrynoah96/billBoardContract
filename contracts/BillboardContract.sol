@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 
 
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
 import '@zoralabs/core/dist/contracts/interfaces/IMarket.sol';
 import '@zoralabs/core/dist/contracts/interfaces/IMedia.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
@@ -98,6 +98,18 @@ contract BillboardContract is IERC721Receiver {
     }
     
     
+    // this functionality implements the setAsk for multiple Media in a single function call
+    function batchSetSale(uint256 _amount, uint256[] memory _tokenIds) public{
+        
+        for(uint256 i=0; i< _tokenIds.length; i++){
+            IMarket.Ask memory saleCondition = IMarket.Ask(_amount, wethRinkeby);
+            MediaContract.setAsk(_tokenIds[i], saleCondition);
+            
+        }
+        
+    }
+    
+    
     function bidForToken(uint256 _tokenId, uint256 _amount, address _tokenAddress ) public {
        // address owner = MediaContract.previousTokenOwners(_tokenId);
        
@@ -115,12 +127,12 @@ contract BillboardContract is IERC721Receiver {
       function splitContractWEth()public payable{
         require(msg.sender == admin, 'only admin please');
         
-        
+        //split eth balance in contract to 50% for the 2 stakeholders
         uint256 contractWEthBalance = wethInstance.balanceOf(address(this));
 
         //split contractWEthBalance equally among stakeHolders 
         for(uint256 i =0; i < stakeHolders.length; i++){
-            
+            //all stake holders should hold atleast 10,000 $Stake
             payable(stakeHolders[i]).transfer(contractWEthBalance/stakeHolders.length);
         }
         
