@@ -24,6 +24,30 @@ contract BillboardContract is IERC721Receiver {
    
    // Weth address on rinkeby
    address wethRinkeby = 0xc778417E063141139Fce010982780140Aa0cD5Ab;
+   address mainCompany;
+   
+   
+   address[] companies;
+   mapping(address => bool) public isCompany;
+   
+   // map company to weth _amount
+   mapping(address => uint256) public companyBalance;
+   
+   
+   address[] foundingMembers;
+   mapping(address => bool) isFoundingMember;
+   mapping(address => uint256) public foundingMemberBalance;
+   
+   
+   //mapping for companyPoolShare
+   uint256 public mainCompanyBalance;
+   
+   // contract weth allocation-
+   
+   uint256 public collectiveContractBalance;
+   
+   
+   
    
    IERC20 wethInstance = IERC20(wethRinkeby);
    
@@ -32,6 +56,7 @@ contract BillboardContract is IERC721Receiver {
    //Media.sol constructor
    constructor()public{
        admin = msg.sender;
+       mainCompany = msg.sender;
    }
    
    function viewAdmin()public view returns(address){
@@ -39,11 +64,6 @@ contract BillboardContract is IERC721Receiver {
    }
    
   
-   function addStakeHolder(address _newStakeHolder) public {
-       require(msg.sender == admin, 'only admin can add stakeholder');
-       stakeHolders.push(_newStakeHolder);
-   }
-   
   
    function MintMedia(string memory tokenURI,
    string memory metadataURI, string memory contentHash, 
@@ -54,7 +74,6 @@ contract BillboardContract is IERC721Receiver {
        IMedia.MediaData memory newData = IMedia.MediaData(tokenURI, metadataURI, contentBytes32, metadataBytes32);
        IMarket.BidShares memory bid_Share = IMarket.BidShares(Decimal.D256(0* 10**18), Decimal.D256(creatorShare * 10**18), Decimal.D256(ownerShare * 10**18));
        MediaContract.mint(newData, bid_Share);
-  
    }
    
    function BatchMintMedia(string[] memory allTokenURI,
@@ -117,30 +136,93 @@ contract BillboardContract is IERC721Receiver {
         MediaContract.setBid(_tokenId, bidProposal);
     }
     
+    
     function approveBid(uint256 _amount, uint256 _tokenId, address _tokenAddress) public{
         IMarket.Bid memory bidProposed = IMarket.Bid(_amount, _tokenAddress, msg.sender, msg.sender, Decimal.D256(0)); 
         MediaContract.acceptBid(_tokenId, bidProposed);
+        splitOnFirstSale();
     }
     
     
-    
-      function splitContractWEth()public payable{
-        require(msg.sender == admin, 'only admin please');
-        
-        //split eth balance in contract to 50% for the 2 stakeholders
-        uint256 contractWEthBalance = wethInstance.balanceOf(address(this));
-
-        //split contractWEthBalance equally among stakeHolders 
-        for(uint256 i =0; i < stakeHolders.length; i++){
-            //all stake holders should hold atleast 10,000 $Stake
-            payable(stakeHolders[i]).transfer(contractWEthBalance/stakeHolders.length);
-        }
-        
-      }
-        
-        function wethBalanceOfContract() public view returns(uint256){
-            return wethInstance.balanceOf(address(this));
-        }
-        
+    function addCompanyAddress(address _newCompany)public {
+      //  require(msg.sender == admin, 'only admin can call this function');
+        companies.push(_newCompany);
+        isCompany[_newCompany] = true;
         
     }
+    
+    function addFoundingMember(address _newMember) public{
+     //   require(msg.sender == admin, 'only admin can call this function');
+        foundingMembers.push(_newMember);
+        isFoundingMember[_newMember] = true;
+    }
+    
+    
+    // returns entire weth balance of contract
+    function wethBalanceOfContract() public view returns(uint256){
+        return wethInstance.balanceOf(address(this));
+    }
+    
+    
+    // individual companies can withdraw thier earnings so far
+    function withdrawCompanyEarning(address _companyAddress) public {
+        require(isCompany[_companyAddress] == true, 'this address is not on the list of the companies');
+        require(msg.sender == _companyAddress, 'You cannot withdraw on behalf of another company address');
+        require(companyBalance[_companyAddress] > 0, 'your balance is currently zero');
+        companyBalance[_companyAddress] = 0;
+        wethInstance.transfer(_companyAddress, companyBalance[_companyAddress]);
+    }
+    
+    // founding teams can withdraw thier earnings so far
+    function withdrawFoundingMemberBalance(address _member)public{
+        require(isFoundingMember[_member] == true, 'this address is not on the list of founding members');
+        require(msg.sender == _member, 'you cannot withdraw on behalf of another founding member');
+        require(foundingMemberBalance[_member] > 0, 'your balance is currently zero');
+        foundingMemberBalance[_member] = 0;
+        wethInstance.transfer(_member, foundingMemberBalance[_member]);
+        
+    }
+    
+    function mainCompanyWithdraw()public{
+        require(msg.sender == mainCompany, 'only the address of the main company can do this');
+        mainCompanyBalance = 0;
+        wethInstance.transfer(msg.sender, mainCompanyBalance);
+    }
+    
+    // function to split- its an internal function
+    function splitOnFirstSale() internal {
+        // calculate portions for company Pool, main company and collectives
+        uint256 amountToSplit = wethInstance.balanceOf(address(this));
+        uint256 mainCompanyShare = amountToSplit * 90/100; 
+        uint256 companyPoolShare = amountToSplit * 10/100;
+        uint256 foundingMembersShare = amountToSplit * 5/100;
+        uint256 collectiveContractShare = amountToSplit * 5/100;
+        
+        // update main company balance
+        mainCompanyBalance = mainCompanyShare;
+        collectiveContractBalance = collectiveContractShare;
+        
+        
+        for(uint256 i = 0; i<companies.length; i++){
+            // 
+            companyBalance[companies[i]] = companyPoolShare / companies.length;
+            
+        }
+        
+        
+        for(uint256 j = 0; j < foundingMembers.length; j++){
+            foundingMemberBalance[foundingMembers[j]] = foundingMembersShare/foundingMembers.length;
+        }
+        
+    
+        
+    }
+    
+    function withdrawCollectiveBalance()public{
+        //   require(msg.sender == admin, 'only admin can call this function');
+        collectiveContractBalance = 0;
+        wethInstance.transfer(msg.sender, collectiveContractBalance);
+        
+    }
+    
+}
