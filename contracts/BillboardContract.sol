@@ -5,6 +5,7 @@ pragma experimental ABIEncoderV2;
 
 
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+//import  "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import '@zoralabs/core/dist/contracts/interfaces/IMarket.sol';
 import '@zoralabs/core/dist/contracts/interfaces/IMedia.sol';
@@ -21,6 +22,7 @@ contract BillboardContract is IERC721Receiver {
    
    // zora contract on rinkeby
    IMedia MediaContract = IMedia(0x7C2668BD0D3c050703CEcC956C11Bd520c26f7d4); 
+   IMarket MarketContract = IMarket(0x85e946e1Bd35EC91044Dc83A5DdAB2B6A262ffA6);
    
    // Weth address on rinkeby
    address wethRinkeby = 0xc778417E063141139Fce010982780140Aa0cD5Ab;
@@ -67,26 +69,25 @@ contract BillboardContract is IERC721Receiver {
   
    function MintMedia(string memory tokenURI,
    string memory metadataURI, string memory contentHash, 
-   string memory metadataHash, uint256 creatorShare, uint256 ownerShare) public{
+   string memory metadataHash) public{
       
        bytes32 contentBytes32 = stringToBytes32(contentHash);
        bytes32 metadataBytes32 = stringToBytes32(metadataHash);
        IMedia.MediaData memory newData = IMedia.MediaData(tokenURI, metadataURI, contentBytes32, metadataBytes32);
-       IMarket.BidShares memory bid_Share = IMarket.BidShares(Decimal.D256(0* 10**18), Decimal.D256(creatorShare * 10**18), Decimal.D256(ownerShare * 10**18));
+       IMarket.BidShares memory bid_Share = IMarket.BidShares(Decimal.D256(0* 10**18), Decimal.D256(100 * 10**18), Decimal.D256(0 * 10**18));
        MediaContract.mint(newData, bid_Share);
    }
    
    function BatchMintMedia(string[] memory allTokenURI,
    string[] memory allMetadataURI, string[] memory allContentHash,
-   string[] memory allMetadataHash, uint256[] memory creatorShares, 
-   uint256[] memory ownerShares) public returns(bool){
+   string[] memory allMetadataHash) public returns(bool){
      //  require(allTokenURI.length == allMetadataURI.length, 'unequal paramter lenghts');
        
        for(uint256 i = 0; i < allTokenURI.length; i++){
         bytes32 contentBytes32 = stringToBytes32(allContentHash[i]);
        bytes32 metadataBytes32 = stringToBytes32(allMetadataHash[i]);
        IMedia.MediaData memory newData = IMedia.MediaData(allTokenURI[i], allMetadataURI[i], contentBytes32, metadataBytes32);
-       IMarket.BidShares memory bid_Share = IMarket.BidShares(Decimal.D256(0 * 10**18), Decimal.D256(creatorShares[i] * 10**18), Decimal.D256(ownerShares[i] * 10**18));
+       IMarket.BidShares memory bid_Share = IMarket.BidShares(Decimal.D256(0 * 10**18), Decimal.D256(100 * 10**18), Decimal.D256(0 * 10**18));
        MediaContract.mint(newData, bid_Share);
        }
        return true;
@@ -105,13 +106,29 @@ contract BillboardContract is IERC721Receiver {
     }
     
     
+    function MediaBidShares(uint256 tokenId) public view returns(IMarket.BidShares memory){
+        return MarketContract.bidSharesForToken(tokenId);
+        
+    }
+    
     function onERC721Received(address, address, uint256, bytes memory) public virtual override returns (bytes4) {
         return this.onERC721Received.selector;
     }
     
 
-    // this functionality implements the set Ask in zora contracts
-    function setToSale(uint256 _amount, uint256 _tokenId) public {
+    // this functionality implements the set Ask in zora contracts for creator
+    function setToSaleForCreator(uint256 _amount, uint256 _tokenId) public {
+        IMarket.Ask memory saleCondition = IMarket.Ask(_amount, wethRinkeby);
+        MediaContract.setAsk(_tokenId, saleCondition);
+    }
+    
+    
+    // this functionality is to set back to sale by previousTokenOwners
+    // the bid share is also reset
+    function reSale(uint256 _tokenId, uint256 _amount) public{
+         IMarket.BidShares memory bid_Share = IMarket.BidShares(Decimal.D256(0 * 10**18), Decimal.D256(15 * 10**18), Decimal.D256(85 * 10**18));
+        MarketContract.setBidShares(_tokenId, bid_Share);
+        
         IMarket.Ask memory saleCondition = IMarket.Ask(_amount, wethRinkeby);
         MediaContract.setAsk(_tokenId, saleCondition);
     }
@@ -128,19 +145,31 @@ contract BillboardContract is IERC721Receiver {
         
     }
     
+    // function to see currentAsk on a tokenURI
+    function currentAskPrice(uint256 tokenId) internal view returns(uint256) {
+        return MarketContract.currentAskForToken(tokenId).amount;
+    }
     
-    function bidForToken(uint256 _tokenId, uint256 _amount, address _tokenAddress ) public {
-       // address owner = MediaContract.previousTokenOwners(_tokenId);
+    
+    function bidForToken(uint256 _tokenId, uint256 _amount ) public {
        
-        IMarket.Bid memory bidProposal = IMarket.Bid(_amount, _tokenAddress, msg.sender, msg.sender, Decimal.D256(0)); 
+        IMarket.Bid memory bidProposal = IMarket.Bid(_amount, wethRinkeby, msg.sender, msg.sender, Decimal.D256(0)); 
         MediaContract.setBid(_tokenId, bidProposal);
+        
+        // get current ask price on tokenId
+        uint256 currentAskValue = currentAskPrice(_tokenId);
+        // amount to be split on first sale
+        if(_amount >= currentAskValue){
+            splitOnFirstSale(_amount);
+        }
+        
     }
     
     
     function approveBid(uint256 _amount, uint256 _tokenId, address _tokenAddress) public{
         IMarket.Bid memory bidProposed = IMarket.Bid(_amount, _tokenAddress, msg.sender, msg.sender, Decimal.D256(0)); 
         MediaContract.acceptBid(_tokenId, bidProposed);
-        splitOnFirstSale();
+        
     }
     
     
@@ -190,9 +219,9 @@ contract BillboardContract is IERC721Receiver {
     }
     
     // function to split- its an internal function
-    function splitOnFirstSale() internal {
+    function splitOnFirstSale(uint256 amountToSplit) internal {
         // calculate portions for company Pool, main company and collectives
-        uint256 amountToSplit = wethInstance.balanceOf(address(this));
+        
         uint256 mainCompanyShare = amountToSplit * 90/100; 
         uint256 companyPoolShare = amountToSplit * 10/100;
         uint256 foundingMembersShare = amountToSplit * 5/100;
