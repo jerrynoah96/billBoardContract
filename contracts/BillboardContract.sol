@@ -228,19 +228,19 @@ contract BillboardContract is IERC721Receiver {
         uint256 collectiveContractShare = amountToSplit * 5/100;
         
         // update main company balance
-        mainCompanyBalance = mainCompanyShare;
-        collectiveContractBalance = collectiveContractShare;
+        mainCompanyBalance += mainCompanyShare;
+        collectiveContractBalance += collectiveContractShare;
         
         
         for(uint256 i = 0; i<companies.length; i++){
             // 
-            companyBalance[companies[i]] = companyPoolShare / companies.length;
+            companyBalance[companies[i]] += companyPoolShare / companies.length;
             
         }
         
         
         for(uint256 j = 0; j < foundingMembers.length; j++){
-            foundingMemberBalance[foundingMembers[j]] = foundingMembersShare/foundingMembers.length;
+            foundingMemberBalance[foundingMembers[j]] += foundingMembersShare/foundingMembers.length;
         }
         
     
