@@ -12,7 +12,9 @@ import '@zoralabs/core/dist/contracts/interfaces/IMedia.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 
-
+interface ERC721Owner {
+  function ownerOf(uint256 token) external view returns (address);
+}
 
 contract BillboardContract is IERC721Receiver {
     
@@ -24,9 +26,13 @@ contract BillboardContract is IERC721Receiver {
    IMedia MediaContract = IMedia(0x7C2668BD0D3c050703CEcC956C11Bd520c26f7d4); 
    IMarket MarketContract = IMarket(0x85e946e1Bd35EC91044Dc83A5DdAB2B6A262ffA6);
    
+   ERC721Owner MediaOwner = ERC721Owner(0x7C2668BD0D3c050703CEcC956C11Bd520c26f7d4);
+   
    // Weth address on rinkeby
    address wethRinkeby = 0xc778417E063141139Fce010982780140Aa0cD5Ab;
    address mainCompany;
+   
+   
    
    
    address[] companies;
@@ -105,6 +111,11 @@ contract BillboardContract is IERC721Receiver {
         }
     }
     
+    function OwnerOfMedia(uint256 tokenId) public view returns(address){
+        address owner = MediaOwner.ownerOf(tokenId);
+        return owner;
+    }
+    
     
     function MediaBidShares(uint256 tokenId) public view returns(IMarket.BidShares memory){
         return MarketContract.bidSharesForToken(tokenId);
@@ -146,21 +157,27 @@ contract BillboardContract is IERC721Receiver {
     }
     
     // function to see currentAsk on a tokenURI
-    function currentAskPrice(uint256 tokenId) internal view returns(uint256) {
+    function currentAskPrice(uint256 tokenId) public view returns(uint256) {
         return MarketContract.currentAskForToken(tokenId).amount;
     }
     
     
     function bidForToken(uint256 _tokenId, uint256 _amount ) public {
+        
        
         IMarket.Bid memory bidProposal = IMarket.Bid(_amount, wethRinkeby, msg.sender, msg.sender, Decimal.D256(0)); 
         MediaContract.setBid(_tokenId, bidProposal);
         
         // get current ask price on tokenId
         uint256 currentAskValue = currentAskPrice(_tokenId);
+        address owner = OwnerOfMedia(_tokenId);
         // amount to be split on first sale
-        if(_amount >= currentAskValue){
+        if(_amount >= currentAskValue && owner == address(this)){
             splitOnFirstSale(_amount);
+        }
+        
+        if(_amount >= currentAskValue && owner != address(this)){
+            splitOnSubsequentSale(_tokenId);
         }
         
     }
@@ -223,9 +240,12 @@ contract BillboardContract is IERC721Receiver {
         // calculate portions for company Pool, main company and collectives
         
         uint256 mainCompanyShare = amountToSplit * 90/100; 
-        uint256 companyPoolShare = amountToSplit * 10/100;
-        uint256 foundingMembersShare = amountToSplit * 5/100;
-        uint256 collectiveContractShare = amountToSplit * 5/100;
+        uint256 companyPoolShare = amountToSplit * 5/100;
+        
+        // collective pool share
+        uint256 collectivePoolShare = amountToSplit * 5/100; 
+        uint256 foundingMembersShare = collectivePoolShare/2;
+        uint256 collectiveContractShare = collectivePoolShare/2;
         
         // update main company balance
         mainCompanyBalance += mainCompanyShare;
@@ -244,6 +264,36 @@ contract BillboardContract is IERC721Receiver {
         }
         
     
+        
+    }
+    
+    function splitOnSubsequentSale(uint256 amountToSplit) internal{
+        
+         // calculate portions for company Pool, main company and collectives
+        
+        uint256 mainCompanyShare = amountToSplit * 10/100; 
+        uint256 companyPoolShare = amountToSplit * 1/100;
+        
+        //collective Pool share
+        uint256 collectivePoolShare = amountToSplit * 4/100;
+        uint256 foundingMembersShare = collectivePoolShare/2;
+        uint256 collectiveContractShare = collectivePoolShare/2;
+        
+        // update main company balance
+        mainCompanyBalance += mainCompanyShare;
+        collectiveContractBalance += collectiveContractShare;
+        
+        
+        for(uint256 i = 0; i<companies.length; i++){
+            // 
+            companyBalance[companies[i]] += companyPoolShare / companies.length;
+            
+        }
+        
+        
+        for(uint256 j = 0; j < foundingMembers.length; j++){
+            foundingMemberBalance[foundingMembers[j]] += foundingMembersShare/foundingMembers.length;
+        }
         
     }
     
