@@ -20,7 +20,7 @@ contract BillboardContract is IERC721Receiver {
     
     using SafeMath for uint256;
     
-   address[] public stakeHolders;
+  // address[] public stakeHolders;
    
    // zora contract on rinkeby
    IMedia MediaContract = IMedia(0x7C2668BD0D3c050703CEcC956C11Bd520c26f7d4); 
@@ -35,7 +35,7 @@ contract BillboardContract is IERC721Receiver {
    
    
    
-   address[] companies;
+   address[] public companies;
    mapping(address => bool) public isCompany;
    
    // map company to weth _amount
