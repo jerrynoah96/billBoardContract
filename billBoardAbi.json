@@ -2,55 +2,6 @@
 	{
 		"inputs": [
 			{
-				"internalType": "address",
-				"name": "_newCompany",
-				"type": "address"
-			}
-		],
-		"name": "addCompanyAddress",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_newMember",
-				"type": "address"
-			}
-		],
-		"name": "addFoundingMember",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "_amount",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_tokenId",
-				"type": "uint256"
-			},
-			{
-				"internalType": "address",
-				"name": "_tokenAddress",
-				"type": "address"
-			}
-		],
-		"name": "approveBid",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
 				"internalType": "string[]",
 				"name": "allTokenURI",
 				"type": "string[]"
@@ -61,14 +12,14 @@
 				"type": "string[]"
 			},
 			{
-				"internalType": "string[]",
+				"internalType": "bytes32[]",
 				"name": "allContentHash",
-				"type": "string[]"
+				"type": "bytes32[]"
 			},
 			{
-				"internalType": "string[]",
+				"internalType": "bytes32[]",
 				"name": "allMetadataHash",
-				"type": "string[]"
+				"type": "bytes32[]"
 			}
 		],
 		"name": "BatchMintMedia",
@@ -103,31 +54,6 @@
 	{
 		"inputs": [
 			{
-				"internalType": "uint256",
-				"name": "_tokenId",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_amount",
-				"type": "uint256"
-			}
-		],
-		"name": "bidForToken",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "mainCompanyWithdraw",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
 				"internalType": "string",
 				"name": "tokenURI",
 				"type": "string"
@@ -138,14 +64,14 @@
 				"type": "string"
 			},
 			{
-				"internalType": "string",
+				"internalType": "bytes32",
 				"name": "contentHash",
-				"type": "string"
+				"type": "bytes32"
 			},
 			{
-				"internalType": "string",
+				"internalType": "bytes32",
 				"name": "metadataHash",
-				"type": "string"
+				"type": "bytes32"
 			}
 		],
 		"name": "MintMedia",
@@ -224,34 +150,14 @@
 		"type": "function"
 	},
 	{
-		"inputs": [],
-		"name": "withdrawCollectiveBalance",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
 		"inputs": [
 			{
 				"internalType": "address",
-				"name": "_companyAddress",
+				"name": "_wallet",
 				"type": "address"
 			}
 		],
-		"name": "withdrawCompanyEarning",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_member",
-				"type": "address"
-			}
-		],
-		"name": "withdrawFoundingMemberBalance",
+		"name": "withdrawContractBalance",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -262,57 +168,6 @@
 		"type": "constructor"
 	},
 	{
-		"inputs": [],
-		"name": "collectiveContractBalance",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"name": "companies",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"name": "companyBalance",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
 		"inputs": [
 			{
 				"internalType": "uint256",
@@ -321,57 +176,6 @@
 			}
 		],
 		"name": "currentAskPrice",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"name": "foundingMemberBalance",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"name": "isCompany",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "mainCompanyBalance",
 		"outputs": [
 			{
 				"internalType": "uint256",
