@@ -21,7 +21,7 @@ contract BillboardContract is IERC721Receiver {
     using SafeMath for uint256;
     
   
-   
+   mapping(address => bool) public isAdmin;
    // zora contract on rinkeby
    IMedia MediaContract = IMedia(0x7C2668BD0D3c050703CEcC956C11Bd520c26f7d4); 
    IMarket MarketContract = IMarket(0x85e946e1Bd35EC91044Dc83A5DdAB2B6A262ffA6);
@@ -33,37 +33,56 @@ contract BillboardContract is IERC721Receiver {
   
    IERC20 wethInstance = IERC20(wethRinkeby);
    
-   address admin;
+   address mainAdmin;
    
-   //Media.sol constructor
-   constructor()public{
-       admin = msg.sender;
+   modifier onlyAdmin{
+       require(isAdmin[msg.sender] == true, 'only an admin can call this function');
+       _;
    }
    
-   function viewAdmin()public view returns(address){
-       return admin;
+   modifier onlyMainAdmin{
+       require(msg.sender == mainAdmin, 'only the main admin can call this function');
+       _;
    }
    
-  
-  
+   // Media.sol constructor
+   constructor(address _mainAdmin)public{
+       mainAdmin = _mainAdmin;
+       isAdmin[_mainAdmin] = true;
+   }
+   
+   
+   function viewMainAdmin()public view returns(address){
+       return mainAdmin;
+   }
+   
+   function addAdmin(address _newAdmin) public onlyMainAdmin{
+       isAdmin[_newAdmin] = true;
+   }
+   
+   function removeAdmin(address _adminAddress) public onlyMainAdmin{
+       require(isAdmin[_adminAddress] == true, 'this address is currently not an admin');
+       isAdmin[_adminAddress] = false;
+   }
+   
    function MintMedia(string memory tokenURI,
    string memory metadataURI, bytes32 contentHash, 
-   bytes32 metadataHash) public{
+   bytes32 metadataHash) public onlyAdmin{
       
        IMedia.MediaData memory newData = IMedia.MediaData(tokenURI, metadataURI, contentHash, metadataHash);
-       IMarket.BidShares memory bid_Share = IMarket.BidShares(Decimal.D256(0* 10**18), Decimal.D256(100 * 10**18), Decimal.D256(0 * 10**18));
+       IMarket.BidShares memory bid_Share = IMarket.BidShares(Decimal.D256(0* 10**18), Decimal.D256(15 * 10**18), Decimal.D256(85 * 10**18));
        MediaContract.mint(newData, bid_Share);
    }
    
+   
    function BatchMintMedia(string[] memory allTokenURI,
    string[] memory allMetadataURI, bytes32[] memory allContentHash,
-   bytes32[] memory allMetadataHash) public returns(bool){
-     //  require(allTokenURI.length == allMetadataURI.length, 'unequal paramter lenghts');
-       
+   bytes32[] memory allMetadataHash) public onlyAdmin returns(bool){
+     
        for(uint256 i = 0; i < allTokenURI.length; i++){
        
        IMedia.MediaData memory newData = IMedia.MediaData(allTokenURI[i], allMetadataURI[i], allContentHash[i], allMetadataHash[i]);
-       IMarket.BidShares memory bid_Share = IMarket.BidShares(Decimal.D256(0 * 10**18), Decimal.D256(100 * 10**18), Decimal.D256(0 * 10**18));
+       IMarket.BidShares memory bid_Share = IMarket.BidShares(Decimal.D256(0 * 10**18), Decimal.D256(15 * 10**18), Decimal.D256(85 * 10**18));
        MediaContract.mint(newData, bid_Share);
        }
        return true;
@@ -87,22 +106,12 @@ contract BillboardContract is IERC721Receiver {
     }
     
 
-    // this functionality implements the set Ask in zora contracts for creator
-    function setToSaleForCreator(uint256 _amount, uint256 _tokenId) public {
+    // this functionality implements the set Ask in zora contracts
+    function setToSale(uint256 _amount, uint256 _tokenId) public {
         IMarket.Ask memory saleCondition = IMarket.Ask(_amount, wethRinkeby);
         MediaContract.setAsk(_tokenId, saleCondition);
     }
     
-    
-    // this functionality is to set back to sale by previousTokenOwners
-    // the bid share is also reset
-    function reSale(uint256 _tokenId, uint256 _amount) public{
-         IMarket.BidShares memory bid_Share = IMarket.BidShares(Decimal.D256(0 * 10**18), Decimal.D256(15 * 10**18), Decimal.D256(85 * 10**18));
-        MarketContract.setBidShares(_tokenId, bid_Share);
-        
-        IMarket.Ask memory saleCondition = IMarket.Ask(_amount, wethRinkeby);
-        MediaContract.setAsk(_tokenId, saleCondition);
-    }
     
     
     // this functionality implements the setAsk for multiple Media in a single function call
@@ -127,7 +136,7 @@ contract BillboardContract is IERC721Receiver {
         return wethInstance.balanceOf(address(this));
     }
     
-    function withdrawContractBalance(address _wallet) public{
+    function withdrawContractBalance(address _wallet) public onlyMainAdmin{
         wethInstance.transfer(_wallet, wethInstance.balanceOf(address(this)));
     }
     

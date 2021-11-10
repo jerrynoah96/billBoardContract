@@ -2,6 +2,19 @@
 	{
 		"inputs": [
 			{
+				"internalType": "address",
+				"name": "_newAdmin",
+				"type": "address"
+			}
+		],
+		"name": "addAdmin",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
 				"internalType": "string[]",
 				"name": "allTokenURI",
 				"type": "string[]"
@@ -116,17 +129,12 @@
 	{
 		"inputs": [
 			{
-				"internalType": "uint256",
-				"name": "_tokenId",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_amount",
-				"type": "uint256"
+				"internalType": "address",
+				"name": "_adminAddress",
+				"type": "address"
 			}
 		],
-		"name": "reSale",
+		"name": "removeAdmin",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -144,7 +152,7 @@
 				"type": "uint256"
 			}
 		],
-		"name": "setToSaleForCreator",
+		"name": "setToSale",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -163,7 +171,13 @@
 		"type": "function"
 	},
 	{
-		"inputs": [],
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_mainAdmin",
+				"type": "address"
+			}
+		],
 		"stateMutability": "nonpayable",
 		"type": "constructor"
 	},
@@ -181,6 +195,25 @@
 				"internalType": "uint256",
 				"name": "",
 				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "isAdmin",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
 			}
 		],
 		"stateMutability": "view",
@@ -264,7 +297,7 @@
 	},
 	{
 		"inputs": [],
-		"name": "viewAdmin",
+		"name": "viewMainAdmin",
 		"outputs": [
 			{
 				"internalType": "address",
