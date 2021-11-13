@@ -161,6 +161,32 @@
 		"inputs": [
 			{
 				"internalType": "address",
+				"name": "_mainAdmin",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "_mediaContractAddress",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "_marketContractAddress",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "_wethAddress",
+				"type": "address"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
 				"name": "_wallet",
 				"type": "address"
 			}
@@ -169,17 +195,6 @@
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_mainAdmin",
-				"type": "address"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "constructor"
 	},
 	{
 		"inputs": [

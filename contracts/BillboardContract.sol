@@ -20,18 +20,17 @@ contract BillboardContract is IERC721Receiver {
     
     using SafeMath for uint256;
     
-  
+   address mediaContractAddress;
+   address marketContractAddress;
+   address wethAddress;
    mapping(address => bool) public isAdmin;
    // zora contract on rinkeby
-   IMedia MediaContract = IMedia(0x7C2668BD0D3c050703CEcC956C11Bd520c26f7d4); 
-   IMarket MarketContract = IMarket(0x85e946e1Bd35EC91044Dc83A5DdAB2B6A262ffA6);
+   IMedia MediaContract = IMedia(mediaContractAddress); 
+   IMarket MarketContract = IMarket(marketContractAddress);
    
-   ERC721Owner MediaOwner = ERC721Owner(0x7C2668BD0D3c050703CEcC956C11Bd520c26f7d4);
+   ERC721Owner MediaOwner = ERC721Owner(mediaContractAddress);
    
-   // Weth address on rinkeby
-   address wethRinkeby = 0xc778417E063141139Fce010982780140Aa0cD5Ab;
-  
-   IERC20 wethInstance = IERC20(wethRinkeby);
+   IERC20 wethInstance = IERC20(wethAddress);
    
    address mainAdmin;
    
@@ -46,7 +45,13 @@ contract BillboardContract is IERC721Receiver {
    }
    
    // Media.sol constructor
-   constructor(address _mainAdmin)public{
+   constructor(address _mainAdmin,
+   address _mediaContractAddress,
+   address _marketContractAddress,
+   address _wethAddress)public{
+       mediaContractAddress = _mediaContractAddress;
+       marketContractAddress = _marketContractAddress;
+       wethAddress = _wethAddress;
        mainAdmin = _mainAdmin;
        isAdmin[_mainAdmin] = true;
    }
@@ -108,7 +113,7 @@ contract BillboardContract is IERC721Receiver {
 
     // this functionality implements the set Ask in zora contracts
     function setToSale(uint256 _amount, uint256 _tokenId) public {
-        IMarket.Ask memory saleCondition = IMarket.Ask(_amount, wethRinkeby);
+        IMarket.Ask memory saleCondition = IMarket.Ask(_amount, wethAddress);
         MediaContract.setAsk(_tokenId, saleCondition);
     }
     
@@ -118,7 +123,7 @@ contract BillboardContract is IERC721Receiver {
     function batchSetSale(uint256 _amount, uint256[] memory _tokenIds) public{
         
         for(uint256 i=0; i< _tokenIds.length; i++){
-            IMarket.Ask memory saleCondition = IMarket.Ask(_amount, wethRinkeby);
+            IMarket.Ask memory saleCondition = IMarket.Ask(_amount, wethAddress);
             MediaContract.setAsk(_tokenIds[i], saleCondition);
             
         }
