@@ -20,17 +20,15 @@ contract BillboardContract is IERC721Receiver {
     
     using SafeMath for uint256;
     
-   address mediaContractAddress;
-   address marketContractAddress;
    address wethAddress;
    mapping(address => bool) public isAdmin;
    // zora contract on rinkeby
-   IMedia MediaContract = IMedia(mediaContractAddress); 
-   IMarket MarketContract = IMarket(marketContractAddress);
+   IMedia MediaContract;
+   IMarket MarketContract;
    
-   ERC721Owner MediaOwner = ERC721Owner(mediaContractAddress);
+   ERC721Owner MediaOwner;
    
-   IERC20 wethInstance = IERC20(wethAddress);
+   IERC20 wethInstance;
    
    address mainAdmin;
    
@@ -49,9 +47,11 @@ contract BillboardContract is IERC721Receiver {
    address _mediaContractAddress,
    address _marketContractAddress,
    address _wethAddress)public{
-       mediaContractAddress = _mediaContractAddress;
-       marketContractAddress = _marketContractAddress;
+       MediaContract = IMedia(_mediaContractAddress);
+       MarketContract = IMarket(_marketContractAddress);
+       MediaOwner = ERC721Owner(_mediaContractAddress);
        wethAddress = _wethAddress;
+       wethInstance = IERC20(_wethAddress);
        mainAdmin = _mainAdmin;
        isAdmin[_mainAdmin] = true;
    }
