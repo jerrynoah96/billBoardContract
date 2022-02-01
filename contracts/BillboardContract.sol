@@ -8,12 +8,13 @@ import "@zoralabs/core/dist/contracts/interfaces/IMarket.sol";
 import "@zoralabs/core/dist/contracts/interfaces/IMedia.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 interface ERC721Owner {
   function ownerOf(uint256 token) external view returns (address);
 }
 
-contract BillboardContract is IERC721Receiver, Initializable {
+contract BillboardContract is IERC721Receiver, Initializable, OwnableUpgradeable {
   using SafeMath for uint256;
 
   address wethAddress;
@@ -60,6 +61,7 @@ contract BillboardContract is IERC721Receiver, Initializable {
     wethInstance = IERC20(_wethAddress);
     mainAdmin = _mainAdmin;
     isAdmin[_mainAdmin] = true;
+    OwnableUpgradeable.__Ownable_init();
   }
 
   function viewMainAdmin() public view returns (address) {
